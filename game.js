@@ -117,7 +117,11 @@ playerGrid.querySelectorAll(".grid-cell").forEach(cell => {
   if (boardArrayPlayer[row][col] === "ship") {
     cell.classList.add("ship");
   }
+
 });
+
+playerGrid.style.pointerEvents = "none";
+
 
 
 
