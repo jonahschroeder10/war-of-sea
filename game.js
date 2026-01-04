@@ -33,6 +33,8 @@ function createBoard(grid) {
       grid.appendChild(cell);
     }
   }
+
+  return grid;
 }
 
 
@@ -121,6 +123,25 @@ playerGrid.querySelectorAll(".grid-cell").forEach(cell => {
 });
 
 playerGrid.style.pointerEvents = "none";
+
+// ==========================
+// CREATE HITTING MECHANIC
+// ==========================
+
+// Player
+aiGrid.querySelectorAll(".grid-cell").forEach(cell => {
+  const row = Number(cell.dataset.row);
+  const col = Number(cell.dataset.col);
+
+  cell.addEventListener("click", () => {
+    if (boardArrayPlayer[row][col] === "ship") {
+      cell.classList.add("hit")
+    } else if (boardArrayPlayer[row][col] === "empty") {
+      cell.classList.add("miss")
+    }
+    cell.style.pointerEvents = "none";
+  });
+});
 
 
 
