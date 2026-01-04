@@ -38,8 +38,13 @@ function createBoard(grid) {
 }
 
 
-let boardArrayPlayer = Array.from({ length: boardSize }, () => Array(boardSize).fill("empty"));
-let boardArrayAI = Array.from({ length: boardSize }, () => Array(boardSize).fill("empty"));
+let boardArrayPlayer = Array.from({ length: boardSize }, () =>
+  Array.from({ length: boardSize }, () => ({ status: "empty", ship: "none" }))
+);
+let boardArrayAI = Array.from({ length: boardSize }, () =>
+  Array.from({ length: boardSize }, () => ({ status: "empty", ship: "none" }))
+);
+
 
 // ==========================
 // PLACING SHIPS
@@ -51,12 +56,12 @@ function canPlaceShip(board, row, col, length, horizontal) {
   if (horizontal) {
     if (col + length > size) return false;
     for (let i = 0; i < length; i++) {
-      if (board[row][col + i] !== "empty") return false;
+      if (board[row][col + i].status !== "empty") return false;
     }
   } else {
     if (row + length > size) return false;
     for (let i = 0; i < length; i++) {
-      if (board[row + i][col] !== "empty") return false;
+      if (board[row + i][col].status !== "empty") return false;
     }
   }
 
@@ -77,9 +82,9 @@ function placeShips(board, length) {
     if (canPlaceShip(board, row, col, length, horizontal)) {
       for (let i = 0; i < length; i++) {
         if (horizontal) {
-          board[row][col + i] = "ship";
+          board[row][col + i].status = "ship";
         } else {
-          board[row + i][col] = "ship";
+          board[row + i][col].status = "ship";
         }
       }
       placed = true;
@@ -116,7 +121,7 @@ playerGrid.querySelectorAll(".grid-cell").forEach(cell => {
   const row = Number(cell.dataset.row);
   const col = Number(cell.dataset.col);
 
-  if (boardArrayPlayer[row][col] === "ship") {
+  if (boardArrayPlayer[row][col].status === "ship") {
     cell.classList.add("ship");
   }
 
@@ -134,14 +139,19 @@ aiGrid.querySelectorAll(".grid-cell").forEach(cell => {
   const col = Number(cell.dataset.col);
 
   cell.addEventListener("click", () => {
-    if (boardArrayPlayer[row][col] === "ship") {
+    if (boardArrayPlayer[row][col].status === "ship") {
       cell.classList.add("hit")
-    } else if (boardArrayPlayer[row][col] === "empty") {
+    } else if (boardArrayPlayer[row][col].status === "empty") {
       cell.classList.add("miss")
     }
     cell.style.pointerEvents = "none";
   });
 });
+
+// ==========================
+// CHOOSE GAME WINNER
+// ==========================
+
 
 
 
