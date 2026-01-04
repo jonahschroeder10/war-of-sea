@@ -96,6 +96,9 @@ button:hover {
 .grid-cell.miss {
 	background-color: lightblue;
 }
+.grid-cell.sunk {
+	background-color: darkred;
+}
 #displayPlayers {
 	margin-top: 20px;
 	font-size: 18px;

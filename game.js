@@ -131,20 +131,56 @@ playerGrid.style.pointerEvents = "none";
 // CREATE HITTING MECHANIC
 // ==========================
 
+function checkIfShipIsCompleted(board, shipName) {
+  for (let row = 0; row < board.length; row++) {
+    for (let col = 0; col < board[row].length; col++) {
+      const cell = board[row][col];
+      if (cell.ship === shipName && cell.status !== "hitted") {
+        return false; // At least one part is still not hit
+      }
+    }
+  }
+
+  return true; // All parts are hit
+}
+
+function markShipAsSunk(board, shipName, grid) {
+  for (let row = 0; row < board.length; row++) {
+    for (let col = 0; col < board[row].length; col++) {
+      const cell = board[row][col];
+      if (cell.ship === shipName) {
+        const gridCell = grid.querySelector(`.grid-cell[data-row="${row}"][data-col="${col}"]`);
+        if (gridCell) {
+          gridCell.classList.add("sunk");
+        }
+      }
+    }
+  }
+}
+
+
 // Player
 aiGrid.querySelectorAll(".grid-cell").forEach(cell => {
   const row = Number(cell.dataset.row);
   const col = Number(cell.dataset.col);
 
   cell.addEventListener("click", () => {
-    if (boardArrayPlayer[row][col].status === "ship") {
-      cell.classList.add("hit")
-    } else if (boardArrayPlayer[row][col].status === "empty") {
-      cell.classList.add("miss")
+    if (boardArrayAI[row][col].status === "ship") {
+      cell.classList.add("hit");
+      boardArrayAI[row][col].status = "hitted";
+
+      if (checkIfShipIsCompleted(boardArrayAI, boardArrayAI[row][col].ship)) {
+        markShipAsSunk(boardArrayAI, boardArrayAI[row][col].ship, aiGrid);
+      }
+
+    } else if (boardArrayAI[row][col].status === "empty") {
+      cell.classList.add("miss");
+      boardArrayAI[row][col].status = "hitted";
     }
     cell.style.pointerEvents = "none";
   });
 });
+
 
 // ==========================
 // CHOOSE GAME WINNER
