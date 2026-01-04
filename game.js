@@ -68,11 +68,9 @@ function canPlaceShip(board, row, col, length, horizontal) {
   return true;
 }
 
-function placeShips(board, length) {
+function placeShips(board, length, ships) {
   const size = board.length;
   let placed = false;
-
-
 
   while(!placed) {
     const horizontal = Math.random() > 0.5;
@@ -83,12 +81,20 @@ function placeShips(board, length) {
       for (let i = 0; i < length; i++) {
         if (horizontal) {
           board[row][col + i].status = "ship";
+          board[row][col + i].ship = ships;
         } else {
           board[row + i][col].status = "ship";
+          board[row + i][col].ship = ships;
         }
       }
       placed = true;
     }
+  }
+}
+
+function allShipsPlaced(board) {
+  for (let i = 0; i < ships.length; i++) {
+    placeShips(board, ships[i].size, ships[i].name);
   }
 }
 
@@ -101,20 +107,12 @@ const aiGrid = document.getElementById("ai-board");
 // Player
 let grid = playerGrid;
 const playerBoard = createBoard(grid);
-placeShips(boardArrayPlayer, ships[0].size);
-placeShips(boardArrayPlayer, ships[1].size);
-placeShips(boardArrayPlayer, ships[2].size);
-placeShips(boardArrayPlayer, ships[3].size);
-placeShips(boardArrayPlayer, ships[4].size);
+allShipsPlaced(boardArrayPlayer);
 
 // AI
 grid = aiGrid;
 const aiBoard = createBoard(grid);
-placeShips(boardArrayAI, ships[0].size);
-placeShips(boardArrayAI, ships[1].size);
-placeShips(boardArrayAI, ships[2].size);
-placeShips(boardArrayAI, ships[3].size);
-placeShips(boardArrayAI, ships[4].size);
+allShipsPlaced(boardArrayAI);
 
 // Update ships in grid
 playerGrid.querySelectorAll(".grid-cell").forEach(cell => {
