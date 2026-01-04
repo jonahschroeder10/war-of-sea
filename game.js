@@ -1,5 +1,5 @@
 // ==========================
-// GRUNDKONFIGURATION
+// MAINCONFIGURATION
 // ==========================
 const player = localStorage.getItem("player1Name") || "Player";
 const boardSize = parseInt(localStorage.getItem("boardSize")) || 10;
@@ -17,23 +17,24 @@ const ships = [
 // CREATE GAMEBOARD
 // ==========================
 function createBoard(grid) {
-  const cells = boardSize * boardSize;
-
   grid.style.gridTemplateColumns = `repeat(${boardSize}, 1fr)`;
   grid.style.gridTemplateRows = `repeat(${boardSize}, 1fr)`;
 
   grid.innerHTML = "";
 
-  for (let i = 0; i < cells; i++) {
-    const cell = document.createElement("div");
-    cell.classList.add("grid-cell");
+  for (let row = 0; row < boardSize; row++) {
+    for (let col = 0; col < boardSize; col++) {
+      const cell = document.createElement("div");
+      cell.classList.add("grid-cell");
 
-    cell.dataset.index = i;
+      cell.dataset.row = row;
+      cell.dataset.col = col;
 
-    grid.appendChild(cell);
+      grid.appendChild(cell);
+    }
   }
-
 }
+
 
 let boardArrayPlayer = Array.from({ length: boardSize }, () => Array(boardSize).fill("empty"));
 let boardArrayAI = Array.from({ length: boardSize }, () => Array(boardSize).fill("empty"));
@@ -93,13 +94,30 @@ const aiGrid = document.getElementById("ai-board");
 // Player
 let grid = playerGrid;
 const playerBoard = createBoard(grid);
+placeShips(boardArrayPlayer, ships[0].size);
+placeShips(boardArrayPlayer, ships[1].size);
 placeShips(boardArrayPlayer, ships[2].size);
-console.log(boardArrayPlayer);
+placeShips(boardArrayPlayer, ships[3].size);
+placeShips(boardArrayPlayer, ships[4].size);
 
 // AI
 grid = aiGrid;
 const aiBoard = createBoard(grid);
+placeShips(boardArrayAI, ships[0].size);
+placeShips(boardArrayAI, ships[1].size);
 placeShips(boardArrayAI, ships[2].size);
-console.log(boardArrayAI);
+placeShips(boardArrayAI, ships[3].size);
+placeShips(boardArrayAI, ships[4].size);
+
+// Update ships in grid
+playerGrid.querySelectorAll(".grid-cell").forEach(cell => {
+  const row = Number(cell.dataset.row);
+  const col = Number(cell.dataset.col);
+
+  if (boardArrayPlayer[row][col] === "ship") {
+    cell.classList.add("ship");
+  }
+});
+
 
 
