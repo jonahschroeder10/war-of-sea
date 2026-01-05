@@ -39,7 +39,7 @@ function createBoard(grid) {
 
 
 let boardArrayPlayer = Array.from({ length: boardSize }, () =>
-  Array.from({ length: boardSize }, () => ({ status: "empty", ship: "none" }))
+  Array.from({ length: boardSize }, () => ({ status: "empty", ship: "none", aiDecision: "none" }))
 );
 let boardArrayAI = Array.from({ length: boardSize }, () =>
   Array.from({ length: boardSize }, () => ({ status: "empty", ship: "none" }))
@@ -181,6 +181,27 @@ aiGrid.querySelectorAll(".grid-cell").forEach(cell => {
   });
 });
 
+// AI
+function searchMode() {
+  // Choose random cell 
+  size = boardArrayPlayer.length;
+  const row = Math.floor(Math.random() * size);
+  const col = Math.floor(Math.random() * size);
+  const gridCell = playerGrid.querySelector(`.grid-cell[data-row="${row}"][data-col="${col}"]`);
+  
+  if (boardArrayPlayer[row][col].status !== "hitted") {
+    if (boardArrayPlayer[row][col].status === "ship") {
+      boardArrayPlayer[row][col].status = "hitted";    
+      if (gridCell) {
+        gridCell.classList.add("hit");
+      }
+    }
+  } else {
+    return;
+  }
+}
+
+searchMode();
 
 // ==========================
 // CHOOSE GAME WINNER
