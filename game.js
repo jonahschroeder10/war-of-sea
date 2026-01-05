@@ -183,21 +183,37 @@ aiGrid.querySelectorAll(".grid-cell").forEach(cell => {
 
 // AI
 function searchMode() {
-  // Choose random cell 
-  size = boardArrayPlayer.length;
-  const row = Math.floor(Math.random() * size);
-  const col = Math.floor(Math.random() * size);
-  const gridCell = playerGrid.querySelector(`.grid-cell[data-row="${row}"][data-col="${col}"]`);
-  
-  if (boardArrayPlayer[row][col].status !== "hitted") {
-    if (boardArrayPlayer[row][col].status === "ship") {
-      boardArrayPlayer[row][col].status = "hitted";    
-      if (gridCell) {
-        gridCell.classList.add("hit");
-      }
+  const size = boardArrayPlayer.length;
+  let attempts = 0;
+  const maxAttempts = size * size;
+
+  while (attempts < maxAttempts) {
+    const row = Math.floor(Math.random() * size);
+    const col = Math.floor(Math.random() * size);
+    
+    const cellStatus = boardArrayPlayer[row][col].status;
+    
+    // Skip already hitted or missed cells
+    if (cellStatus === "hitted" || cellStatus === "missed") {
+      attempts++;
+      continue;
     }
-  } else {
-    return;
+
+    const gridCell = playerGrid.querySelector(`.grid-cell[data-row="${row}"][data-col="${col}"]`);
+    
+    if (cellStatus === "ship") {
+      boardArrayPlayer[row][col].status = "hitted";
+      if (gridCell) gridCell.classList.add("hit");
+      
+      if (checkIfShipIsCompleted(boardArrayPlayer, boardArrayPlayer[row][col].ship)) {
+        markShipAsSunk(boardArrayPlayer, boardArrayPlayer[row][col].ship, playerGrid);
+      }
+    } else if (cellStatus === "empty") {
+      boardArrayPlayer[row][col].status = "missed";
+      if (gridCell) gridCell.classList.add("miss");
+    }
+    
+    return; // Finish the function after a successful shot
   }
 }
 
