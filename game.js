@@ -158,31 +158,63 @@ function markShipAsSunk(board, shipName, grid) {
   }
 }
 
+// AI //
 
-// Player
-aiGrid.querySelectorAll(".grid-cell").forEach(cell => {
-  const row = Number(cell.dataset.row);
-  const col = Number(cell.dataset.col);
+lastAIHit = null;
 
-  cell.addEventListener("click", () => {
-    if (boardArrayAI[row][col].status === "ship") {
-      cell.classList.add("hit");
-      boardArrayAI[row][col].status = "hitted";
+// Tries to chase down the ship
+function huntingMode() {
+  let hit = false;
+  const board = boardArrayPlayer;
 
-      if (checkIfShipIsCompleted(boardArrayAI, boardArrayAI[row][col].ship)) {
-        markShipAsSunk(boardArrayAI, boardArrayAI[row][col].ship, aiGrid);
-      }
+  const { row, col } = lastAIHit;
 
-    } else if (boardArrayAI[row][col].status === "empty") {
-      cell.classList.add("miss");
-      boardArrayAI[row][col].status = "hitted";
-    }
-    cell.style.pointerEvents = "none";
+  // Collect neighbour cells
+  const nearCells = [
+    { r: row + 1, c: col },
+    { r: row - 1, c: col },
+    { r: row, c: col + 1 },
+    { r: row, c: col - 1 }
+  ].filter(pos =>
+    pos.r >= 0 &&
+    pos.r < board.length &&
+    pos.c >= 0 &&
+    pos.c < board.length
+  );
+
+  // Only shootable cells
+  const filteredCells = nearCells.filter(({r, c}) => {
+    const status = boardArrayPlayer[r][c].status;
+    return status === "ship" || status === "empty";
   });
-});
 
-// AI
+  if (filteredCells.length === 0) return;
+
+  while (!hit && filteredCells.length > 0) {
+    const index = Math.floor(Math.random() * filteredCells.length);
+    const { r, c } = filteredCells.splice(index, 1)[0];
+    const cell = board[r][c];
+
+    const gridCell = playerGrid.querySelector(
+      `.grid-cell[data-row="${r}"][data-col="${c}"]`
+    );
+
+    if (cell.status === "ship") {
+      cell.status = "hitted";
+      if (gridCell) gridCell.classList.add("hit");
+      hit = true;
+    } else if (cell.status === "empty") {
+      cell.status = "missed";
+      if (gridCell) gridCell.classList.add("miss");
+      hit = true;
+    }
+  }
+}
+
+
+// Tries to randomly hit a ship cell
 function searchMode() {
+
   const size = boardArrayPlayer.length;
   let attempts = 0;
   const maxAttempts = size * size;
@@ -208,14 +240,49 @@ function searchMode() {
       if (checkIfShipIsCompleted(boardArrayPlayer, boardArrayPlayer[row][col].ship)) {
         markShipAsSunk(boardArrayPlayer, boardArrayPlayer[row][col].ship, playerGrid);
       }
+
+      lastAIHit = { row, col };
     } else if (cellStatus === "empty") {
       boardArrayPlayer[row][col].status = "missed";
       if (gridCell) gridCell.classList.add("miss");
     }
-    
-    return; // Finish the function after a successful shot
+    return true; // Finish the function after a successful shot
   }
 }
+
+// Create turn mechanic 
+function aiTurn() {
+  if (lastAIHit) {
+    huntingMode();
+  } else {
+    searchMode();
+  }
+}
+
+// Player //
+aiGrid.querySelectorAll(".grid-cell").forEach(cell => {
+  const row = Number(cell.dataset.row);
+  const col = Number(cell.dataset.col);
+
+  cell.addEventListener("click", () => {
+    if (boardArrayAI[row][col].status === "ship") {
+      cell.classList.add("hit");
+      boardArrayAI[row][col].status = "hitted";
+
+      if (checkIfShipIsCompleted(boardArrayAI, boardArrayAI[row][col].ship)) {
+        markShipAsSunk(boardArrayAI, boardArrayAI[row][col].ship, aiGrid);
+      }
+    } else if (boardArrayAI[row][col].status === "empty") {
+      cell.classList.add("miss");
+      boardArrayAI[row][col].status = "hitted";
+    }
+    setTimeout(200);
+    aiTurn();
+
+    cell.style.pointerEvents = "none";
+  });
+});
+
 
 // ==========================
 // CHOOSE GAME WINNER
