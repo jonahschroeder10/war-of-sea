@@ -2,45 +2,134 @@
 <html lang="en">
 <head>
 	<meta charset="UTF-8">
-	<meta name="viewport" content="width=, initial-scale=1.0">
-	<title>Schiffe Versenken - Startseite</title>
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>War of Sea - Startseite</title>
 	<link rel="stylesheet" href="style.css">
 </head>
 <body>
+
 	<header>
-		<h1>Schiffe Versenken</h1>
+		<h1>War of Sea</h1>
 	</header>
-	<main>
-		<h2>Willkommen zu Schiffe Versenken!</h2>
 
-		<br>
+	<main style="display: flex; gap: 60px; flex-direction: row; align-items: center; justify-content: center; padding-top: 20px; min-height: calc(100vh - 200px);">
 
-		<label for="player-name">Spielername</label>
-		<br>
-		<input type="text" id="player-name" placeholder="Name eingeben">
-		
-		<br><br><br>
+		<!-- Configuration Section -->
+		<div class="config-section">
+			<h2>Game Configuration</h2>
 
-		<label for="board-size">Spielfeldgröße</label>
-		<select id="board-size">
-			<option value="8">8x8</option>
-			<option value="10" selected>10x10</option>
-			<option value="12">12x12</option>
-		</select>
+			<label for="player-name">Player Name</label>
+			<input type="text" id="player-name" placeholder="Enter your name">
 
-		<button id="new-game-button">Neues Spiel</button>
-	</main>	
+			<!-- Board Size -->
+			<label>Board Size</label>
+			<div class="custom-select" id="board-size" data-value="10">
+				<div class="custom-select__trigger">
+					<span class="custom-select__value">10x10</span>
+				</div>
+				<div class="custom-select__options">
+					<div class="custom-select__option" data-value="8">8x8</div>
+					<div class="custom-select__option selected" data-value="10">10x10</div>
+					<div class="custom-select__option" data-value="12">12x12</div>
+				</div>
+			</div>
+
+			<!-- Difficulty -->
+			<label>Difficulty</label>
+			<div class="custom-select" id="difficulty" data-value="medium">
+				<div class="custom-select__trigger">
+					<span class="custom-select__value">Medium</span>
+				</div>
+				<div class="custom-select__options">
+					<div class="custom-select__option" data-value="easy">Easy</div>
+					<div class="custom-select__option selected" data-value="medium">Medium</div>
+				</div>
+			</div>
+
+			<button id="new-game-button">Start Game</button>
+		</div>
+
+		<!-- Instructions Section -->
+		<div class="instructions-section">
+			<h2>How to Play</h2>
+			<ul>
+				<li><strong>Objective:</strong> Sink all enemy ships before your own fleet is destroyed</li>
+				<li><strong>Your Grid:</strong> The left board shows your ships. Guard them well!</li>
+				<li><strong>Enemy Grid:</strong> The right board is where you attack the enemy</li>
+				<li><strong>Taking Turns:</strong> Click on enemy grid cells to attack</li>
+				<li><strong>Hits & Misses:</strong> Red indicates a hit, light blue indicates a miss</li>
+				<li><strong>Strategy:</strong> Remember where you've attacked and learn from your hits</li>
+				<li><strong>Victory:</strong> Eliminate all enemy ships to win the game!</li>
+			</ul>
+		</div>
+	</main>
+
+	<!-- Custom Select Logic -->
 	<script>
-		document.getElementById('new-game-button').addEventListener('click', function() {
+
+
+		function initCustomSelects() {
+			document.querySelectorAll('.custom-select').forEach(select => {
+				const trigger = select.querySelector('.custom-select__trigger');
+				const valueEl = select.querySelector('.custom-select__value');
+				const options = Array.from(select.querySelectorAll('.custom-select__option'));
+
+				// initialize from dataset.value if present
+				const initial = select.dataset.value;
+				let matched = options.find(o => o.dataset.value === String(initial));
+				if (!matched) matched = options.find(o => o.classList.contains('selected')) || options[0];
+
+				// set initial visual state
+				options.forEach(o => o.classList.remove('selected'));
+				if (matched) {
+					matched.classList.add('selected');
+					valueEl.textContent = matched.textContent;
+					select.dataset.value = matched.dataset.value;
+				}
+
+				trigger.addEventListener('click', (ev) => {
+					ev.stopPropagation();
+					// close other selects
+					document.querySelectorAll('.custom-select.open').forEach(s => { if (s !== select) s.classList.remove('open'); });
+					select.classList.toggle('open');
+				});
+
+				options.forEach(option => {
+					option.addEventListener('click', (e) => {
+						e.stopPropagation();
+						options.forEach(o => o.classList.remove('selected'));
+						option.classList.add('selected');
+
+						valueEl.textContent = option.textContent;
+						select.dataset.value = option.dataset.value;
+						select.classList.remove('open');
+					});
+				});
+			});
+		}
+
+		// close when clicking outside
+		document.addEventListener('click', () => {
+			document.querySelectorAll('.custom-select.open').forEach(s => s.classList.remove('open'));
+		});
+
+		// Initialize once DOM is parsed
+		document.addEventListener('DOMContentLoaded', initCustomSelects);
+
+		/* Start Game */
+		document.getElementById('new-game-button').addEventListener('click', () => {
 			const playerName = document.getElementById('player-name').value;
-			const boardSize = document.getElementById('board-size').value;
+			const boardSize = document.getElementById('board-size').dataset.value;
+			const difficulty = document.getElementById('difficulty').dataset.value;
 
 			localStorage.setItem('playerName', playerName);
 			localStorage.setItem('boardSize', boardSize);
+			localStorage.setItem('difficulty', difficulty);
 
-			const url = `game.html`;
-			window.location.href = url;
+			window.location.href = 'game.html';
 		});
+
 	</script>
+
 </body>
 </html>

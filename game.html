@@ -3,17 +3,49 @@
 <head>
 	<meta charset="UTF-8">
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
-	<title>Schiffe Versenken - Spiel</title>
+	<title>War of Sea - Spiel</title>
 	<link rel="stylesheet" href="style.css">
 </head>
 <body>
 	<header>
-		<h1>Schiffe Versenken</h1>
+		<h1>War of Sea</h1>
 	</header>
 	<main style="flex-direction: row; gap: 40px;">
-		<div id="player-board" class="gridboard"></div>
-		<div id="ai-board" class="gridboard"></div>
+		<div style="position: relative;">
+			<label for="player-board" id="label-player-board" class="grid-label"></label>
+			<div id="player-ships-count" class="ships-count">Ships: 5</div>
+			<br>
+			<div id="player-board" class="gridboard"></div>
+		</div>
+
+		<div style="position: relative;">
+			<label for="ai-board" class="grid-label">Enemy</label>
+			<div id="ai-ships-count" class="ships-count">Ships: 5</div>
+			<br>
+			<div id="ai-board" class="gridboard"></div>
+		</div>
 	</main>
+
+	<!-- Winner Screen -->
+	<div id="winner-modal" class="winner-modal hidden">
+		<div class="winner-container">
+			<img src="./assets/images/crown-icon.png" alt="Crown Icon" class="winner-icon">
+			<h2 id="winner-title" class="winner-title"></h2>
+			<p id="winner-message" class="winner-message"></p>
+			<div class="winner-buttons">
+				<button id="play-again-btn" class="winner-btn">Play Again</button>
+				<button id="home-btn" class="winner-btn secondary">Back to Home</button>
+			</div>
+		</div>
+	</div>
 </body>
+<script>
+	document.getElementById("play-again-btn").addEventListener("click", function() {
+		window.location.reload();
+	});
+	document.getElementById("home-btn").addEventListener("click", function() {
+		window.location.href = "index.html";
+	});
+</script>
 <script src="game.js"></script>
 </html>
