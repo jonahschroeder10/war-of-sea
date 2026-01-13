@@ -189,245 +189,261 @@ function updateShipsDisplay() {
   }
 }
 
-// AI logic //
+// ==========================
+// AI LOGIC (STATE MACHINE)
+// ==========================
 
-let lastAIHit = null;
-let nextAiHit = null;
+const AI_STATE = {
+  SEARCH: "search",
+  HUNT: "hunt",
+  TRACK: "track"
+};
+
+let aiState = AI_STATE.SEARCH;
+
+let lastAIHit = null;     // erster Treffer eines Schiffs
+let nextAiHit = null;     // Tracking-Daten
+let currentShip = null;  // aktuell verfolgtes Schiff
+let pendingHits = [];    // gespeicherte Treffer anderer Schiffe
 
 
-// Tries to chase down the ship
-function huntingMode() {
-  let hit = false;
-  const board = boardArrayPlayer;
+// ==========================
+// HELPERS
+// ==========================
 
-  const { row, col } = lastAIHit;
-
-  // Collect neighbour cells
-  const nearCells = [
-    { r: row + 1, c: col, direction: "down" },
-    { r: row - 1, c: col, direction: "up" },
-    { r: row, c: col + 1, direction: "right" },
-    { r: row, c: col - 1, direction: "left" }
-  ].filter(pos =>
-    pos.r >= 0 &&
-    pos.r < board.length &&
-    pos.c >= 0 &&
-    pos.c < board.length
-  );
-
-  // Only shootable cells
-  const filteredCells = nearCells.filter(({r, c}) => {
-    const status = boardArrayPlayer[r][c].status;
-    return status === "ship" || status === "empty";
-  });
-
-  if (filteredCells.length === 0) return;
-
-  while (!hit && filteredCells.length > 0) {
-    const index = Math.floor(Math.random() * filteredCells.length);
-    const { r, c, direction } = filteredCells.splice(index, 1)[0];
-    const cell = board[r][c];
-
-    const gridCell = playerGrid.querySelector(`.grid-cell[data-row="${r}"][data-col="${c}"]`);
-
-    if (cell.status === "ship") {
-      cell.status = "hitted";
-      if (gridCell) gridCell.classList.add("hit");
-
-      if (checkIfShipIsCompleted(boardArrayPlayer, boardArrayPlayer[r][c].ship)) {
-        markShipAsSunk(boardArrayPlayer, boardArrayPlayer[r][c].ship, playerGrid);
-        updateShipsDisplay();
-        lastAIHit = null;
-        return;
-      }
-      
-      nextAiHit = {
-        r,
-        c,
-        direction,
-        startR: row,
-        startC: col
-      };
-
-      switch (nextAiHit.direction) {
-        case "down":
-          nextAiHit.r++;
-          break;
-        case "up":
-          nextAiHit.r--;
-          break;
-        case "right":
-          nextAiHit.c++;
-          break;
-        case "left":
-          nextAiHit.c--;
-          break;
-      }
-
-      lastAIHit = null;
-
-      hit = true;
-    } else if (cell.status === "empty") {
-      cell.status = "missed";
-      if (gridCell) gridCell.classList.add("miss");
-      hit = true;
-    }
+function rememberHit(ship, row, col) {
+  if (!pendingHits.some(h => h.ship === ship)) {
+    pendingHits.push({ ship, row, col });
   }
 }
 
-// Helping functions for trackMode()
-function reverseDirectionOrAbort() {
-  const reverse = {
-    up: "down",
-    down: "up",
-    left: "right",
-    right: "left"
-  };
+function onShipSunk() {
+  currentShip = null;
+  lastAIHit = null;
+  nextAiHit = null;
 
-  // Already reversed once => abort tracking
+  if (pendingHits.length > 0) {
+    const next = pendingHits.shift(); // FIFO
+    currentShip = next.ship;
+    lastAIHit = { row: next.row, col: next.col };
+    aiState = AI_STATE.HUNT;
+  } else {
+    aiState = AI_STATE.SEARCH;
+  }
+}
+
+
+// ==========================
+// SEARCH MODE
+// ==========================
+
+function searchMode() {
+  const size = boardArrayPlayer.length;
+
+  while (true) {
+    const row = Math.floor(Math.random() * size);
+    const col = Math.floor(Math.random() * size);
+
+    if (difficulty === "medium" && (row + col) % 2 !== 0) continue;
+
+    const cell = boardArrayPlayer[row][col];
+    if (cell.status === "hitted" || cell.status === "missed") continue;
+
+    const gridCell = playerGrid.querySelector(
+      `.grid-cell[data-row="${row}"][data-col="${col}"]`
+    );
+
+    if (cell.status === "ship") {
+      cell.status = "hitted";
+      gridCell?.classList.add("hit");
+
+      if (checkIfShipIsCompleted(boardArrayPlayer, cell.ship)) {
+        markShipAsSunk(boardArrayPlayer, cell.ship, playerGrid);
+        updateShipsDisplay();
+        onShipSunk();
+        return;
+      }
+
+      currentShip = cell.ship;
+      lastAIHit = { row, col };
+      aiState = AI_STATE.HUNT;
+      return;
+    }
+
+    cell.status = "missed";
+    gridCell?.classList.add("miss");
+    return;
+  }
+}
+
+
+// ==========================
+// HUNT MODE
+// ==========================
+
+function huntingMode() {
+  const { row, col } = lastAIHit;
+  const board = boardArrayPlayer;
+
+  const neighbours = [
+    { r: row + 1, c: col, dir: "down" },
+    { r: row - 1, c: col, dir: "up" },
+    { r: row, c: col + 1, dir: "right" },
+    { r: row, c: col - 1, dir: "left" }
+  ].filter(p =>
+    p.r >= 0 && p.c >= 0 &&
+    p.r < board.length && p.c < board.length
+  );
+
+  while (neighbours.length > 0) {
+    const { r, c, dir } = neighbours.splice(
+      Math.floor(Math.random() * neighbours.length), 1
+    )[0];
+
+    const cell = board[r][c];
+    if (cell.status === "hitted" || cell.status === "missed") continue;
+
+    const gridCell = playerGrid.querySelector(
+      `.grid-cell[data-row="${r}"][data-col="${c}"]`
+    );
+
+    if (cell.status === "ship") {
+      cell.status = "hitted";
+      gridCell?.classList.add("hit");
+
+      if (cell.ship !== currentShip) {
+        rememberHit(cell.ship, r, c);
+        return;
+      }
+
+      if (checkIfShipIsCompleted(board, cell.ship)) {
+        markShipAsSunk(board, cell.ship, playerGrid);
+        updateShipsDisplay();
+        onShipSunk();
+        return;
+      }
+
+      nextAiHit = {
+        r,
+        c,
+        direction: dir,
+        startR: row,
+        startC: col,
+        reversed: false
+      };
+
+      advanceToNextTrackingCell();
+      aiState = AI_STATE.TRACK;
+      return;
+    }
+
+    cell.status = "missed";
+    gridCell?.classList.add("miss");
+    return;
+  }
+}
+
+
+// ==========================
+// TRACK MODE
+// ==========================
+
+function reverseDirectionOrAbort() {
+  const reverse = { up: "down", down: "up", left: "right", right: "left" };
+
   if (nextAiHit.reversed) {
     nextAiHit = null;
-    lastAIHit = null;
+    aiState = AI_STATE.HUNT;
     return;
   }
 
   nextAiHit.reversed = true;
   nextAiHit.direction = reverse[nextAiHit.direction];
-
-  // Back to starting point
   nextAiHit.r = nextAiHit.startR;
   nextAiHit.c = nextAiHit.startC;
-
-  // One step in the new direction
   advanceToNextTrackingCell();
 }
-
 
 function advanceToNextTrackingCell() {
   switch (nextAiHit.direction) {
     case "up":    nextAiHit.r--; break;
     case "down":  nextAiHit.r++; break;
-    case "right": nextAiHit.c++; break;
     case "left":  nextAiHit.c--; break;
+    case "right": nextAiHit.c++; break;
   }
 }
 
-
-// Tries to sink the ship
 function trackMode() {
-  let finishedTurn = false;
+  const { r, c } = nextAiHit;
 
-  while (!finishedTurn && nextAiHit) {
-    const { r, c } = nextAiHit;
-
-    // Out of bounds check
-    if (
-      r < 0 ||
-      c < 0 ||
-      r >= boardArrayPlayer.length ||
-      c >= boardArrayPlayer.length
-    ) {
-      reverseDirectionOrAbort();
-      continue; // try again
-    }
-
-    const cell = boardArrayPlayer[r][c];
-    const gridCell = playerGrid.querySelector(
-      `.grid-cell[data-row="${r}"][data-col="${c}"]`
-    );
-
-    // Hit
-    if (cell.status === "ship") {
-      cell.status = "hitted";
-      if (gridCell) gridCell.classList.add("hit");
-
-      if (checkIfShipIsCompleted(boardArrayPlayer, cell.ship)) {
-        markShipAsSunk(boardArrayPlayer, cell.ship, playerGrid);
-        updateShipsDisplay();
-        nextAiHit = null;
-        lastAIHit = null;
-        return;
-      }
-
-      advanceToNextTrackingCell();
-      finishedTurn = true;
-    }
-
-    // Water
-    else if (cell.status === "empty") {
-      cell.status = "missed";
-      if (gridCell) gridCell.classList.add("miss");
-
-      // Change direction immediatly
-      reverseDirectionOrAbort();
-
-      finishedTurn = true;
-    }
-
-
-    // Already hitted
-    else if (cell.status === "hitted" || cell.status === "missed") {
-      advanceToNextTrackingCell();
-    }
+  if (
+    r < 0 || c < 0 ||
+    r >= boardArrayPlayer.length ||
+    c >= boardArrayPlayer.length
+  ) {
+    reverseDirectionOrAbort();
+    return;
   }
+
+  const cell = boardArrayPlayer[r][c];
+  const gridCell = playerGrid.querySelector(
+    `.grid-cell[data-row="${r}"][data-col="${c}"]`
+  );
+
+  if (cell.status === "ship") {
+    cell.status = "hitted";
+    gridCell?.classList.add("hit");
+
+    if (cell.ship !== currentShip) {
+      rememberHit(cell.ship, r, c);
+      advanceToNextTrackingCell();
+      return;
+    }
+
+    if (checkIfShipIsCompleted(boardArrayPlayer, cell.ship)) {
+      markShipAsSunk(boardArrayPlayer, cell.ship, playerGrid);
+      updateShipsDisplay();
+      onShipSunk();
+      return;
+    }
+
+    advanceToNextTrackingCell();
+    return;
+  }
+
+  if (cell.status === "empty") {
+    cell.status = "missed";
+    gridCell?.classList.add("miss");
+    reverseDirectionOrAbort();
+    return;
+  }
+  
+  advanceToNextTrackingCell();
 }
 
 
-// Tries to randomly hit a ship cell
-function searchMode() {
-  const size = boardArrayPlayer.length;
-  let attempts = 0;
-  const maxAttempts = size * size;
+// ==========================
+// AI TURN
+// ==========================
 
-  while (attempts < maxAttempts) {
-    const row = Math.floor(Math.random() * size);
-    const col = Math.floor(Math.random() * size);
-
-    if (difficulty === "medium") {
-      if ((row + col) % 2 !== 0) continue;
-    }
-    
-    
-    const cellStatus = boardArrayPlayer[row][col].status;
-    
-    // Skip already hitted or missed cells
-    if (cellStatus === "hitted" || cellStatus === "missed") {
-      attempts++;
-      continue;
-    }
-
-    const gridCell = playerGrid.querySelector(`.grid-cell[data-row="${row}"][data-col="${col}"]`);
-    
-    if (cellStatus === "ship") {
-      boardArrayPlayer[row][col].status = "hitted";
-      if (gridCell) gridCell.classList.add("hit");
-      
-      if (checkIfShipIsCompleted(boardArrayPlayer, boardArrayPlayer[row][col].ship)) {
-        markShipAsSunk(boardArrayPlayer, boardArrayPlayer[row][col].ship, playerGrid);
-        updateShipsDisplay();
-      }
-
-      lastAIHit = { row, col };
-    } else if (cellStatus === "empty") {
-      boardArrayPlayer[row][col].status = "missed";
-      if (gridCell) gridCell.classList.add("miss");
-    }
-    return true; // Finish the function after a successful shot
-  }
-}
-
-// Create turn mechanic 
 function aiTurn() {
-  if (nextAiHit) {
-    trackMode();
-  } else if (lastAIHit) {
-    huntingMode();
-  } else {
-    searchMode();
+  switch (aiState) {
+    case AI_STATE.SEARCH:
+      searchMode();
+      break;
+    case AI_STATE.HUNT:
+      huntingMode();
+      break;
+    case AI_STATE.TRACK:
+      trackMode();
+      break;
   }
 }
 
-// Player hitting mechanic //
+
+// ==========================
+// PLAYER TURN
+// ==========================
 aiGrid.querySelectorAll(".grid-cell").forEach(cell => {
   const row = Number(cell.dataset.row);
   const col = Number(cell.dataset.col);
@@ -490,5 +506,5 @@ function checkForWinner() {
   }
 }
 
-setInterval(checkForWinner, 1000);
+setInterval(checkForWinner, 400);
 
