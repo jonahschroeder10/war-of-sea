@@ -16,9 +16,63 @@ const ships = [
   { name: "Destroyer", size: 2 }
 ];
 
+switch (boardSize) {
+  case 8:
+    ships.splice(0, 2); // Delete Carrier and Battleship
+    break;
+  case 12:
+    ships.push({ name: "Dreadnought", size: 6 });
+    break;
+}
+
 // ==========================
 // CREATE GAMEBOARD
 // ==========================
+function updateGridCellSizes(boardSize) {
+  let width, height;
+
+  if (window.matchMedia("(max-width: 600px)").matches) {
+    switch (boardSize) {
+      case 8:
+        width = height = "33px";
+        break;
+      case 12:
+        width = height = "21px";
+        break;
+      default:
+        width = height = "26px";
+    }
+  } else if (window.matchMedia("(min-width: 601px) and (max-width: 1024px)").matches) {
+    switch (boardSize) {
+      case 8:
+        width = height = "40px";
+        break;
+      case 12:
+        width = height = "23px";
+        break;
+      default:
+        width = height = "30px";
+    }
+  } else {
+    // Desktop oder größer - Default Größen
+    switch (boardSize) {
+      case 8:
+        width = height = "45px";
+        break;
+      case 12:
+        width = height = "30px";
+        break;
+      default:
+        width = height = "40px";
+    }
+  }
+
+  document.querySelectorAll(".grid-cell").forEach(cell => {
+    cell.style.width = width;
+    cell.style.height = height;
+  });
+}
+
 function createBoard(grid) {
   grid.style.gridTemplateColumns = `repeat(${boardSize}, 1fr)`;
   grid.style.gridTemplateRows = `repeat(${boardSize}, 1fr)`;
@@ -36,6 +90,12 @@ function createBoard(grid) {
       grid.appendChild(cell);
     }
   }
+
+  updateGridCellSizes(boardSize);
+
+  window.matchMedia("(max-width: 600px)").addEventListener('change', () => updateGridCellSizes(boardSize));
+  window.matchMedia("(min-width: 601px) and (max-width: 1024px)").addEventListener('change', () => updateGridCellSizes(boardSize));
+  window.matchMedia("(min-width: 1025px)").addEventListener('change', () => updateGridCellSizes(boardSize));
 
   return grid;
 }
@@ -223,7 +283,9 @@ function onShipSunk() {
   nextAiHit = null;
 
   if (pendingHits.length > 0) {
-    const next = pendingHits.shift(); // FIFO
+    const next = difficulty === "hard"
+      ? pendingHits.pop() // LIFO
+      : pendingHits.shift(); // FIFO
     currentShip = next.ship;
     lastAIHit = { row: next.row, col: next.col };
     aiState = AI_STATE.HUNT;

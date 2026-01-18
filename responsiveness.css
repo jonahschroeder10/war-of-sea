@@ -1,0 +1,187 @@
+/* Extra small screens (phones, 600px and below) */ 
+@media (max-width: 600px) { 
+	header { 
+		font-size: 14px;
+		padding: 5px; 
+	} /* index.html */ 
+	#configuration-alignment { 
+		flex-direction: column !important;
+		padding: 38px 10px !important; 
+		gap: 20px !important; 
+	} 
+	.config-section, 
+	.instructions-section { 
+		margin: 0 auto !important; 
+		width: 100% !important; 
+		min-height: auto !important; 
+		padding: 15px !important; 
+		padding-top: 5px !important; 
+	} 
+	.config-section label, .instructions-section label { 
+		font-size: 14px !important; 
+		margin-top: 5px; 
+	} 
+	button { 
+		font-size: 14px !important; 
+		padding: 10px 16px !important; 
+	} 
+	h2 { 
+		font-size: 22px !important; 
+		margin-bottom: 10px !important; 
+	} 
+	/* game.html */ 
+	.table-alignment { 
+		flex-direction: column; 
+		justify-content: center; 
+		align-items: center; 
+		gap: 20px; 
+		padding-top: 30px; 
+		padding-bottom: 0; 
+	} 
+	.grid-label { 
+		font-size: 14px; 
+	}
+	.gridboard { 
+		gap: 2px; 
+		margin-top: 10px; 
+		padding: 10px; 
+	} 
+	.ships-count { 
+		font-size: 12px; 
+		padding: 4px 8px; 
+	} 
+}
+
+/* Tablets in portrait (601px to 1024px) */
+@media (min-width: 601px) and (max-width: 1024px) and (orientation: portrait) {
+	header {
+		font-size: 16px;
+		padding: 10px;
+	}
+
+	#configuration-alignment {
+		flex-direction: column;
+		padding: 50px 40px;
+		gap: 30px;
+	}
+
+	.config-section,
+	.instructions-section {
+		width: 100%;
+		max-width: 800px;
+		padding: 25px;
+	}
+
+	h2 {
+		font-size: 28px;
+	}
+
+	button {
+		font-size: 16px;
+		padding: 14px 22px;
+		width: auto;
+	}
+
+	/* game.html */
+	.table-alignment {
+		flex-direction: column;
+		gap: 40px;
+	}
+
+	.gridboard {
+		gap: 5px;
+		padding: 18px;
+	}
+
+	.grid-cell {
+		width: 40px;
+		height: 40px;
+		font-size: 12px;
+	}
+
+	.ships-count {
+		font-size: 14px;
+	}
+}
+
+/* Tablets in landscape (601px to 1024px) */
+@media (min-width: 601px) and (max-width: 1024px) and (orientation: landscape) {
+	header {
+		font-size: 17px;
+		padding: 12px;
+	}
+
+	#configuration-alignment {
+		flex-direction: row;
+		padding: 40px 30px;
+		gap: 30px;
+	}
+
+	.config-section,
+	.instructions-section {
+		width: 45%;
+		max-width: none;
+		padding: 20px;
+	}
+
+	h2 {
+		font-size: 26px;
+	}
+
+	button {
+		font-size: 15px;
+		padding: 12px 20px;
+		width: auto;
+	}
+
+	/* game.html */
+	.table-alignment {
+		flex-direction: row;
+		gap: 30px;
+	}
+
+	.gridboard {
+		gap: 4px;
+		padding: 15px;
+	}
+
+	.grid-cell {
+		width: 45px;
+		height: 45px;
+		font-size: 12px;
+	}
+
+	.ships-count {
+		font-size: 13px;
+	}
+}
+
+/* Desktop Standard (Full HD and up to 1920px) - keine Media Query nötig, Default CSS */
+
+/* Big monitors / Widescreen (1921px and above) */
+@media (min-width: 1921px) {
+	body {
+		font-size: 18px;
+	}
+
+	#configuration-alignment,
+	.table-alignment {
+		max-width: 1600px;
+		margin: 0 auto;
+	}
+
+	.gridboard {
+		gap: 6px;
+		padding: 20px;
+	}
+
+	h2 {
+		font-size: 32px;
+	}
+
+	.grid-cell {
+		width: 50px;
+		height: 50px;
+		font-size: 14px;
+	}
+}
